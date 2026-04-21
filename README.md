@@ -41,3 +41,8 @@ Current shipped artifact contents are documented in:
 
 Current honest label:
 - this repo ships a starter-template source bundle, not a built Tauri desktop app
+
+## Minimal POC
+
+The first concrete target for this repo is documented in:
+- `docs/minimal-poc.md`
