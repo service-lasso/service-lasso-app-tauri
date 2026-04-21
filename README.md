@@ -18,3 +18,18 @@ Current scaffold:
 - minimal JavaScript package metadata
 - placeholder frontend entry under `src/`
 - placeholder Rust/Tauri area under `src-tauri/`
+
+## Current release artifact
+
+This starter repo now has a bounded template-source release artifact.
+
+Current local commands:
+- `npm test`
+- `npm run release:artifact`
+- `npm run release:verify`
+
+Current shipped artifact contents are documented in:
+- `docs/release-artifact.md`
+
+Current honest label:
+- this repo ships a starter-template source bundle, not a built Tauri desktop app
