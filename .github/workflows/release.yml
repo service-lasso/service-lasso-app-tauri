@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
 
     steps:
       - name: Check out repo
@@ -21,15 +22,23 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@service-lasso"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Run tests
         run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Verify release artifact
         run: npm run release:verify
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Read release version
         id: release_version
