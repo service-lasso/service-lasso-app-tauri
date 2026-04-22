@@ -13,6 +13,7 @@ const CANDIDATE_RELEASE_PATHS = [
   "package-lock.json",
   "src",
   "src-tauri",
+  "services",
   "docs",
   "scripts",
   "tests",
