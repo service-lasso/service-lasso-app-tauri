@@ -25,9 +25,13 @@ export function resolveTauriConfig(options = {}) {
     options.servicesRoot ??
     process.env.SERVICE_LASSO_SERVICES_ROOT ??
     path.join(workspaceBaseRoot, "services");
-  const echoServiceRoot =
-    options.echoServiceRoot ??
-    process.env.SERVICE_LASSO_APP_TAURI_ECHO_SERVICE_ROOT ??
+  const sourceServicesRoot =
+    options.sourceServicesRoot ??
+    process.env.SERVICE_LASSO_APP_TAURI_SOURCE_SERVICES_ROOT ??
+    path.join(rootDir, "services");
+  const echoServiceRepoRoot =
+    options.echoServiceRepoRoot ??
+    process.env.SERVICE_LASSO_APP_TAURI_ECHO_SERVICE_REPO_ROOT ??
     path.join(siblingRoot, "lasso-echoservice");
 
   return {
@@ -42,13 +46,16 @@ export function resolveTauriConfig(options = {}) {
     adminUrl: `http://127.0.0.1:${hostPort}/admin/`,
     workspaceRoot,
     servicesRoot,
-    echoServiceRoot,
+    sourceServicesRoot,
+    echoServiceRepoRoot,
     tauriConfigPath: path.join(rootDir, "src-tauri", "tauri.conf.json"),
   };
 }
 
 export async function validateTauriConfig(config) {
-  await access(path.join(config.echoServiceRoot, "service.json"));
+  await access(path.join(config.sourceServicesRoot, "echo-service", "service.json"));
+  await access(path.join(config.sourceServicesRoot, "service-admin", "service.json"));
+  await access(path.join(config.echoServiceRepoRoot, "service.json"));
   await access(path.join(config.adminDistRoot, "index.html"));
   return config;
 }

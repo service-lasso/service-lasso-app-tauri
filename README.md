@@ -19,7 +19,8 @@ Current implementation:
 - published `@service-lasso/service-lasso` runtime package consumption
 - host-owned shell at `/`
 - embedded sibling `lasso-@serviceadmin` build at `/admin/`
-- prepared local wrapper `servicesRoot` for sibling `lasso-echoservice`
+- tracked repo-owned `services/` definitions for Echo Service and Service Admin
+- prepared local `servicesRoot` copied from tracked service manifests plus a generated Echo Service runner
 - explicit `src-tauri/` next-step config for a future native wrapper
 
 Current local start command:

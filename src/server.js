@@ -217,14 +217,16 @@ export function createHostStatus(config) {
     runtimeUrl: config.runtimeUrl,
     adminUrl: config.adminUrl,
     servicesRoot: config.servicesRoot,
+    sourceServicesRoot: config.sourceServicesRoot,
     workspaceRoot: config.workspaceRoot,
-    echoServiceRoot: config.echoServiceRoot,
+    echoServiceRepoRoot: config.echoServiceRepoRoot,
     adminDistRoot: config.adminDistRoot,
     tauriConfigPath: config.tauriConfigPath,
     notes: [
       "Desktop-alt shell is served at /.",
       "Service Admin is mounted from the sibling build under /admin/.",
-      "A local wrapper servicesRoot is prepared so only the Echo Service fixture is discovered by default.",
+      "Tracked services/ definitions are copied into the prepared servicesRoot before runtime startup.",
+      "A local Echo Service runner is generated into the prepared servicesRoot.",
       "The next native Tauri wrapper should open this local host URL inside the desktop shell.",
     ],
   };
