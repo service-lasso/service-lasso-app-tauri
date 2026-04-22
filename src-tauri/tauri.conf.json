@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Service Lasso App Tauri",
+  "version": "0.1.0",
+  "identifier": "io.service-lasso.app-tauri",
+  "app": {
+    "windows": [
+      {
+        "title": "Service Lasso Desktop Alt",
+        "url": "http://127.0.0.1:19160",
+        "width": 1440,
+        "height": 960,
+        "resizable": true
+      }
+    ]
+  }
+}

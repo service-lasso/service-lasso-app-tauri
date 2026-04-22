@@ -59,6 +59,15 @@ The POC should:
 - documented host-owned shell output
 - one short smoke checklist
 
+## Current status
+
+This bounded POC is now implemented in-repo:
+- `npm start` boots the published `@service-lasso/service-lasso` runtime
+- the host serves its own desktop-alt shell at `/`
+- the host embeds the sibling built `lasso-@serviceadmin` app at `/admin/`
+- the host prepares a local wrapper `servicesRoot` so `lasso-echoservice` is the discovered service under test
+- `src-tauri/` now contains the explicit next-step config for wrapping the local host URL in a native shell
+
 ## Honest scope limit
 
 This POC does not need:

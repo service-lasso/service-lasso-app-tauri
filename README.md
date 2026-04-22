@@ -6,7 +6,7 @@ Package identity:
 - `@service-lasso/service-lasso-app-tauri`
 
 Purpose:
-- show how to host Service Lasso behind a Tauri shell
+- show how to host Service Lasso behind a Tauri-style desktop shell
 - act as a quick-start template for downstream teams
 - keep desktop-shell concerns outside the core runtime repo
 
@@ -14,10 +14,21 @@ Expected runtime model:
 - `servicesRoot`
 - `workspaceRoot`
 
-Current scaffold:
-- minimal JavaScript package metadata
-- placeholder frontend entry under `src/`
-- placeholder Rust/Tauri area under `src-tauri/`
+Current implementation:
+- desktop-alt host entrypoint under `src/index.js`
+- published `@service-lasso/service-lasso` runtime package consumption
+- host-owned shell at `/`
+- embedded sibling `lasso-@serviceadmin` build at `/admin/`
+- prepared local wrapper `servicesRoot` for sibling `lasso-echoservice`
+- explicit `src-tauri/` next-step config for a future native wrapper
+
+Current local start command:
+- `npm start`
+
+Current local URLs:
+- desktop-alt shell: `http://127.0.0.1:19160`
+- embedded admin UI: `http://127.0.0.1:19160/admin/`
+- runtime API: `http://127.0.0.1:18081`
 
 ## Current release artifact
 
@@ -40,7 +51,7 @@ Current shipped artifact contents are documented in:
 - `docs/release-artifact.md`
 
 Current honest label:
-- this repo ships a starter-template source bundle, not a built Tauri desktop app
+- this repo ships a runnable desktop-alt host starter plus a starter-template source bundle
 
 ## Minimal POC
 

@@ -5,6 +5,7 @@ import path from "node:path";
 
 const CANDIDATE_RELEASE_PATHS = [
   ".gitignore",
+  ".npmrc",
   ".github",
   "README.md",
   "package.json",
@@ -86,6 +87,27 @@ async function runCommand(command, args, options = {}) {
   });
 }
 
+const NPM_COMMAND = process.platform === "win32" ? "npm.cmd" : "npm";
+
+function escapeWindowsCmdArg(value) {
+  if (/^[A-Za-z0-9_./:=@\\-]+$/.test(value)) {
+    return value;
+  }
+
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+async function runNpmCommand(args, options = {}) {
+  if (process.platform !== "win32") {
+    return runCommand(NPM_COMMAND, args, options);
+  }
+
+  const comspec = process.env.ComSpec ?? "cmd.exe";
+  const commandLine = [NPM_COMMAND, ...args].map(escapeWindowsCmdArg).join(" ");
+
+  return runCommand(comspec, ["/d", "/s", "/c", commandLine], options);
+}
+
 async function copyReleasePath(repoRoot, artifactRoot, relativePath) {
   const sourcePath = path.join(repoRoot, relativePath);
   const targetPath = path.join(artifactRoot, relativePath);
@@ -123,6 +145,193 @@ async function createReleaseArchive(outputRoot, artifactName) {
   await rm(archivePath, { force: true });
   await runCommand("tar", ["-czf", archivePath, "-C", outputRoot, artifactName]);
   return archivePath;
+}
+
+async function getLocalCorePackageArchive(repoRoot) {
+  const coreRepoRoot = path.resolve(repoRoot, "..", "service-lasso");
+
+  if (!(await pathExists(path.join(coreRepoRoot, "package.json")))) {
+    return null;
+  }
+
+  const corePackageJson = JSON.parse(await readFile(path.join(coreRepoRoot, "package.json"), "utf8"));
+  const version = corePackageJson.version;
+  const artifactRoot = path.join(coreRepoRoot, "artifacts", "npm", `service-lasso-package-${version}`);
+  const archivePath = path.join(artifactRoot, `service-lasso-service-lasso-${version}.tgz`);
+
+  if (!(await pathExists(archivePath))) {
+    await runNpmCommand(["run", "package:stage"], {
+      cwd: coreRepoRoot,
+      env: process.env,
+    });
+  }
+
+  await stat(archivePath);
+  return archivePath;
+}
+
+async function installStarterDependencies(stagedRoot, repoRoot) {
+  const localCorePackageArchive = await getLocalCorePackageArchive(repoRoot);
+
+  if (localCorePackageArchive) {
+    await runNpmCommand(["install", localCorePackageArchive], {
+      cwd: stagedRoot,
+      env: process.env,
+    });
+    return;
+  }
+
+  await runNpmCommand(["install"], {
+    cwd: stagedRoot,
+    env: process.env,
+  });
+}
+
+async function createVerificationSiblingFixtures(stagedRoot) {
+  const siblingRoot = path.resolve(stagedRoot, "..");
+  const adminDistRoot = path.join(siblingRoot, "lasso-@serviceadmin", "dist");
+  const echoServiceRoot = path.join(siblingRoot, "lasso-echoservice");
+
+  await mkdir(adminDistRoot, { recursive: true });
+  await mkdir(echoServiceRoot, { recursive: true });
+  await writeFile(path.join(adminDistRoot, "index.html"), "<!doctype html><title>serviceadmin</title>", "utf8");
+  await writeFile(
+    path.join(echoServiceRoot, "service.json"),
+    `${JSON.stringify(
+      {
+        id: "echo-service",
+        name: "Echo Service",
+        description: "Verification harness service for the tauri starter artifact.",
+        version: "0.0.0",
+        enabled: true,
+        executable: "go",
+        args: ["run", "."],
+        healthcheck: {
+          type: "process",
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  return {
+    siblingRoot,
+    adminDistRoot,
+    echoServiceRoot,
+  };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForJson(url, timeoutMs = 15000) {
+  const startedAt = Date.now();
+  let lastError = null;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.json();
+      }
+      lastError = new Error(`unexpected status ${response.status} from ${url}`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    await sleep(250);
+  }
+
+  throw lastError ?? new Error(`timed out waiting for ${url}`);
+}
+
+async function smokeStarterHost(stagedRoot, env) {
+  return new Promise((resolve, reject) => {
+    const entrypoint = path.join(stagedRoot, "src", "index.js");
+    const child = spawn(process.execPath, [entrypoint], {
+      cwd: stagedRoot,
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    let shutdownExpected = false;
+    const closePromise = new Promise((innerResolve) => {
+      child.once("close", (code, signal) => {
+        innerResolve({ code, signal });
+      });
+    });
+
+    const finish = (callback) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      callback();
+    };
+
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (error) => {
+      finish(() => reject(error));
+    });
+
+    child.on("close", (code) => {
+      if (settled || shutdownExpected) {
+        return;
+      }
+
+      finish(() =>
+        reject(
+          new Error(`${process.execPath} ${entrypoint} exited early with code ${code}\nstdout:\n${stdout}\nstderr:\n${stderr}`),
+        ),
+      );
+    });
+
+    void (async () => {
+      try {
+        const hostStatus = await waitForJson(`http://127.0.0.1:${env.SERVICE_LASSO_APP_TAURI_PORT}/api/host-status`);
+        const runtimeHealth = await waitForJson(`http://127.0.0.1:${env.SERVICE_LASSO_API_PORT}/api/health`);
+
+        shutdownExpected = true;
+        child.kill("SIGINT");
+        const { code, signal } = await closePromise;
+
+        finish(() => {
+          if (code !== 0 && signal !== "SIGINT" && signal !== "SIGTERM") {
+            reject(
+              new Error(
+                `${process.execPath} ${entrypoint} exited with code ${code} and signal ${signal}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
+              ),
+            );
+            return;
+          }
+
+          resolve({
+            stdout,
+            stderr,
+            hostStatus,
+            runtimeHealth,
+          });
+        });
+      } catch (error) {
+        shutdownExpected = true;
+        child.kill("SIGTERM");
+        finish(() => reject(error));
+      }
+    })();
+  });
 }
 
 export async function stageReleaseArtifact({ repoRoot, outputRoot = path.join(repoRoot, "artifacts"), version } = {}) {
@@ -171,9 +380,16 @@ export async function verifyStagedArtifact({ repoRoot, artifactRoot, archivePath
 
   const packageJson = await readRootPackageJson(repoRoot);
   const expectedNeedle = packageJson.name.split("/").at(-1);
-  const result = await runCommand(process.execPath, [path.join(stagedRoot, "src", "index.js")], {
-    cwd: stagedRoot,
-    env: process.env,
+  const fixtures = await createVerificationSiblingFixtures(stagedRoot);
+  await installStarterDependencies(stagedRoot, repoRoot);
+  const result = await smokeStarterHost(stagedRoot, {
+    ...process.env,
+    SERVICE_LASSO_APP_TAURI_PORT: "19160",
+    SERVICE_LASSO_API_PORT: "18196",
+    SERVICE_LASSO_APP_TAURI_ADMIN_DIST_ROOT: fixtures.adminDistRoot,
+    SERVICE_LASSO_APP_TAURI_ECHO_SERVICE_ROOT: fixtures.echoServiceRoot,
+    SERVICE_LASSO_SERVICES_ROOT: path.join(stagedRoot, ".workspace", "services"),
+    SERVICE_LASSO_WORKSPACE_ROOT: path.join(stagedRoot, ".workspace", "runtime"),
   });
 
   if (!result.stdout.includes(expectedNeedle)) {
