@@ -149,26 +149,34 @@ async function createReleaseArchive(outputRoot, artifactName) {
 }
 
 async function getLocalCorePackageArchive(repoRoot) {
-  const coreRepoRoot = path.resolve(repoRoot, "..", "service-lasso");
+  const candidateRoots = [
+    process.env.SERVICE_LASSO_CORE_REPO_ROOT,
+    path.join(repoRoot, ".service-lasso-core"),
+    path.resolve(repoRoot, "..", "service-lasso"),
+  ].filter(Boolean);
 
-  if (!(await pathExists(path.join(coreRepoRoot, "package.json")))) {
-    return null;
+  for (const coreRepoRoot of candidateRoots) {
+    if (!(await pathExists(path.join(coreRepoRoot, "package.json")))) {
+      continue;
+    }
+
+    const corePackageJson = JSON.parse(await readFile(path.join(coreRepoRoot, "package.json"), "utf8"));
+    const version = corePackageJson.version;
+    const artifactRoot = path.join(coreRepoRoot, "artifacts", "npm", `service-lasso-package-${version}`);
+    const archivePath = path.join(artifactRoot, `service-lasso-service-lasso-${version}.tgz`);
+
+    if (!(await pathExists(archivePath))) {
+      await runNpmCommand(["run", "package:stage"], {
+        cwd: coreRepoRoot,
+        env: process.env,
+      });
+    }
+
+    await stat(archivePath);
+    return archivePath;
   }
 
-  const corePackageJson = JSON.parse(await readFile(path.join(coreRepoRoot, "package.json"), "utf8"));
-  const version = corePackageJson.version;
-  const artifactRoot = path.join(coreRepoRoot, "artifacts", "npm", `service-lasso-package-${version}`);
-  const archivePath = path.join(artifactRoot, `service-lasso-service-lasso-${version}.tgz`);
-
-  if (!(await pathExists(archivePath))) {
-    await runNpmCommand(["run", "package:stage"], {
-      cwd: coreRepoRoot,
-      env: process.env,
-    });
-  }
-
-  await stat(archivePath);
-  return archivePath;
+  return null;
 }
 
 async function installStarterDependencies(stagedRoot, repoRoot) {
