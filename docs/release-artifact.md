@@ -25,7 +25,7 @@ The artifact proves:
 - the template repo can be packaged repeatably
 - the packaged template contains the documented starter files
 - the staged starter can install the core runtime package and still run `npm start`
-- GitHub Actions can upload the artifact and attach the archive to tagged releases
+- GitHub Actions can upload the artifact and attach the archive to the rolling `latest` release on `main`
 
 ## Private package note
 
