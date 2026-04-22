@@ -13,51 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
 
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
-
-      - name: Read core package version
-        id: core_version
-        run: |
-          CORE_VERSION=$(node -p "require('./package.json').dependencies['@service-lasso/service-lasso'].replace(/^[^0-9]*/, '')")
-          echo "core_version=$CORE_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Check out core repo
-        uses: actions/checkout@v4
-        with:
-          repository: service-lasso/service-lasso
-          ref: v${{ steps.core_version.outputs.core_version }}
-          path: .service-lasso-core
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .service-lasso-core/package-lock.json
-
-      - name: Install core build dependencies
-        run: npm ci
-        working-directory: .service-lasso-core
-
-      - name: Stage core package
-        run: npm run package:stage
-        working-directory: .service-lasso-core
-
-      - name: Install starter dependencies
-        run: >
-          npm install --package-lock=false --no-save
-          .service-lasso-core/artifacts/npm/service-lasso-package-${{ steps.core_version.outputs.core_version }}/service-lasso-service-lasso-${{ steps.core_version.outputs.core_version }}.tgz
+          registry-url: https://npm.pkg.github.com
+          scope: "@service-lasso"
 
       - name: Run tests
         run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Verify release artifact
         run: npm run release:verify
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Read release version
         id: release_version
