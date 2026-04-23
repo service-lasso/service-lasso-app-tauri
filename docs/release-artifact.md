@@ -97,6 +97,7 @@ The release now proves:
 - the repo owns explicit tracked service metadata under `services/`
 - the Tauri-oriented host can be packaged repeatably
 - the runnable artifact can boot Service Lasso and Service Admin without sibling-repo checkout tricks
+- the host shell includes a bounded service listing widget backed by the runtime API
 - Echo Service acquisition now depends on manifest-owned archive metadata instead of a generated local wrapper
 - bootstrap-download mode installs the service payload before first use
 - preloaded mode installs from an already-shipped archive without a first-run download
@@ -105,7 +106,9 @@ The release now proves:
 ## Private package note
 
 This starter depends on the published private core package:
-- `@service-lasso/service-lasso`
+- `@service-lasso/service-lasso@latest`
+
+The `latest` dist-tag is intentional so starter artifacts consume the current manifest-owned install/acquire behavior published by the core repo.
 
 For local or CI installs from GitHub Packages, provide a token with package read access through:
 - `NODE_AUTH_TOKEN`

@@ -18,6 +18,7 @@ Current implementation:
 - desktop-alt host entrypoint under `src/index.js`
 - published `@service-lasso/service-lasso` runtime package consumption
 - host-owned shell at `/`
+- host-owned services widget that reads the runtime API through `/api/runtime-services`
 - embedded sibling `lasso-@serviceadmin` build at `/admin/`
 - tracked repo-owned `services/` definitions for Echo Service and Service Admin
 - manifest-owned Echo Service archive metadata under `services/echo-service/service.json`
