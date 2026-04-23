@@ -65,7 +65,7 @@ This bounded POC is now implemented in-repo:
 - `npm start` boots the published `@service-lasso/service-lasso` runtime
 - the host serves its own desktop-alt shell at `/`
 - the host embeds the sibling built `lasso-@serviceadmin` app at `/admin/`
-- the host prepares a local wrapper `servicesRoot` so `lasso-echoservice` is the discovered service under test
+- the host prepares a local `servicesRoot` from the tracked repo `services/` inventory so `echo-service` is discovered from manifest-owned archive metadata
 - `src-tauri/` now contains the explicit next-step config for wrapping the local host URL in a native shell
 
 ## Honest scope limit

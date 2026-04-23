@@ -1,16 +1,18 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { stageReleaseArtifact, verifyStagedArtifact } from "./release-artifact-lib.mjs";
+import { stageReleaseArtifacts, verifyStagedArtifacts } from "./release-artifact-lib.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const staged = await stageReleaseArtifact({ repoRoot });
-const verified = await verifyStagedArtifact({
+const staged = await stageReleaseArtifacts({ repoRoot });
+const verified = await verifyStagedArtifacts({
   repoRoot,
-  artifactRoot: staged.artifactRoot,
-  archivePath: staged.archivePath,
+  staged,
 });
 
-console.log("[service-lasso starter] verified release artifact");
-console.log(`- artifact: ${verified.artifactName}`);
-console.log(`- folder: ${verified.stagedRoot}`);
-console.log(`- archive: ${verified.stagedArchivePath}`);
+console.log("[service-lasso starter] verified release artifacts");
+console.log(`- source artifact: ${verified.artifacts.source.artifactName}`);
+console.log(`- source archive: ${verified.artifacts.source.archivePath}`);
+console.log(`- runtime artifact: ${verified.artifacts.runtime.artifactName}`);
+console.log(`- runtime archive: ${verified.artifacts.runtime.archivePath}`);
+console.log(`- preloaded artifact: ${verified.artifacts.preloaded.artifactName}`);
+console.log(`- preloaded archive: ${verified.artifacts.preloaded.archivePath}`);

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { access } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -12,7 +13,9 @@ export function resolveTauriConfig(options = {}) {
   const adminDistRoot =
     options.adminDistRoot ??
     process.env.SERVICE_LASSO_APP_TAURI_ADMIN_DIST_ROOT ??
-    path.join(siblingRoot, "lasso-@serviceadmin", "dist");
+    (existsSync(path.join(rootDir, ".payload", "admin"))
+      ? path.join(rootDir, ".payload", "admin")
+      : path.join(siblingRoot, "lasso-@serviceadmin", "dist"));
   const workspaceBaseRoot =
     options.workspaceBaseRoot ??
     process.env.SERVICE_LASSO_APP_TAURI_WORKSPACE_BASE_ROOT ??
@@ -29,10 +32,6 @@ export function resolveTauriConfig(options = {}) {
     options.sourceServicesRoot ??
     process.env.SERVICE_LASSO_APP_TAURI_SOURCE_SERVICES_ROOT ??
     path.join(rootDir, "services");
-  const echoServiceRepoRoot =
-    options.echoServiceRepoRoot ??
-    process.env.SERVICE_LASSO_APP_TAURI_ECHO_SERVICE_REPO_ROOT ??
-    path.join(siblingRoot, "lasso-echoservice");
 
   return {
     repoRoot: rootDir,
@@ -47,7 +46,6 @@ export function resolveTauriConfig(options = {}) {
     workspaceRoot,
     servicesRoot,
     sourceServicesRoot,
-    echoServiceRepoRoot,
     tauriConfigPath: path.join(rootDir, "src-tauri", "tauri.conf.json"),
   };
 }
@@ -55,7 +53,6 @@ export function resolveTauriConfig(options = {}) {
 export async function validateTauriConfig(config) {
   await access(path.join(config.sourceServicesRoot, "echo-service", "service.json"));
   await access(path.join(config.sourceServicesRoot, "service-admin", "service.json"));
-  await access(path.join(config.echoServiceRepoRoot, "service.json"));
   await access(path.join(config.adminDistRoot, "index.html"));
   return config;
 }
