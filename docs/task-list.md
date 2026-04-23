@@ -25,7 +25,7 @@ Turn the starter into the smallest real desktop-alt host that:
 4. Serve a host-owned shell page with embedded admin UI and runtime links
    status: done
 
-5. Prepare a local wrapper `servicesRoot` for Echo Service
+5. Prepare a local `servicesRoot` from the tracked service inventory
    status: done
 
 6. Add direct tests for config resolution, host routes, and wrapper materialization

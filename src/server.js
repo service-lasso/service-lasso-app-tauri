@@ -152,7 +152,7 @@ function createShellHtml(config) {
         <span class="eyebrow">Desktop Alt Shell</span>
         <h1>Tauri-ready shell for Service Lasso</h1>
         <p>
-          This bounded host keeps the runtime and admin wiring executable today, while the future native Tauri wrapper simply needs to point its window at this local shell.
+          This bounded host keeps the runtime and admin wiring executable today, while the future native Tauri wrapper simply needs to point its window at this local shell and the tracked service inventory.
         </p>
         <div class="card">
           <span class="label">Runtime API</span>
@@ -219,14 +219,13 @@ export function createHostStatus(config) {
     servicesRoot: config.servicesRoot,
     sourceServicesRoot: config.sourceServicesRoot,
     workspaceRoot: config.workspaceRoot,
-    echoServiceRepoRoot: config.echoServiceRepoRoot,
     adminDistRoot: config.adminDistRoot,
     tauriConfigPath: config.tauriConfigPath,
     notes: [
       "Desktop-alt shell is served at /.",
       "Service Admin is mounted from the sibling build under /admin/.",
       "Tracked services/ definitions are copied into the prepared servicesRoot before runtime startup.",
-      "A local Echo Service runner is generated into the prepared servicesRoot.",
+      "Echo Service archive metadata now lives in services/echo-service/service.json.",
       "The next native Tauri wrapper should open this local host URL inside the desktop shell.",
     ],
   };
