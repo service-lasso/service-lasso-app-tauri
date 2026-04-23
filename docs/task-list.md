@@ -34,7 +34,10 @@ Turn the starter into the smallest real desktop-alt host that:
 7. Add explicit `src-tauri/` next-step wiring docs/config
    status: done
 
-8. Prove local start behavior against the current workspace
+8. Add a bounded host-owned service listing widget backed by the runtime API
+   status: done
+
+9. Prove local start behavior against the current workspace
    status: done
 
 ## Honest current scope
@@ -49,6 +52,7 @@ It only proves:
 
 - `npm test`
 - `npm run release:verify`
+- direct host test for `/api/runtime-services` proxy and widget markup
 - local smoke:
   - desktop-alt shell on `http://127.0.0.1:19160`
   - runtime API on `http://127.0.0.1:18081`

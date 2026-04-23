@@ -17,6 +17,7 @@ The POC should:
 - start or supervise a local `service-lasso` runtime from the Tauri app
 - provide a `servicesRoot` containing Echo Service
 - show host-owned desktop shell output or framing
+- render a host-owned services widget that fetches Service Lasso runtime data
 - render `lasso-@serviceadmin` inside the Tauri window
 - point Service Admin at the local runtime API
 - allow the operator to manage Echo Service from the desktop shell
@@ -44,10 +45,11 @@ The POC should:
 1. Launch the Tauri app.
 2. The Tauri app ensures the runtime is available.
 3. The app shows host-owned shell output or framing.
-4. The app shows Service Admin in the window.
-5. Echo Service appears in the services list.
-6. The operator opens Echo Service detail.
-7. The operator starts/stops Echo Service and views logs.
+4. The host-owned service widget lists services from the runtime API.
+5. The app shows Service Admin in the window.
+6. Echo Service appears in the services list.
+7. The operator opens Echo Service detail.
+8. The operator starts/stops Echo Service and views logs.
 
 ## POC deliverables
 
@@ -64,6 +66,7 @@ The POC should:
 This bounded POC is now implemented in-repo:
 - `npm start` boots the published `@service-lasso/service-lasso` runtime
 - the host serves its own desktop-alt shell at `/`
+- the host shell includes a bounded services widget backed by `/api/runtime-services`
 - the host embeds the sibling built `lasso-@serviceadmin` app at `/admin/`
 - the host prepares a local `servicesRoot` from the tracked repo `services/` inventory so `echo-service` is discovered from manifest-owned archive metadata
 - `src-tauri/` now contains the explicit next-step config for wrapping the local host URL in a native shell
@@ -78,4 +81,4 @@ This POC does not need:
 
 It only needs to prove:
 
-**a Tauri shell can host Service Admin against a real local Service Lasso runtime managing Echo Service**
+**a Tauri shell can host runtime API output plus Service Admin against a real local Service Lasso runtime managing Echo Service**
