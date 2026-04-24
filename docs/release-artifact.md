@@ -103,17 +103,14 @@ The release now proves:
 - preloaded mode installs from an already-shipped archive without a first-run download
 - GitHub Actions can upload the artifacts and attach them to a timestamped `yyyy.m.d-<shortsha>` release on `main`
 
-## Private package note
+## Public package note
 
-This starter depends on the published private core package:
+This starter depends on the public npm core package:
 - `@service-lasso/service-lasso@latest`
 
 The `latest` dist-tag is intentional so starter artifacts consume the current manifest-owned install/acquire behavior published by the core repo.
 
-For local or CI installs from GitHub Packages, provide a token with package read access through:
-- `NODE_AUTH_TOKEN`
-
-The repo `.npmrc` is included in the staged artifacts so the starter knows which registry and scope to use.
+Local and CI installs resolve it from `https://registry.npmjs.org` without GitHub Packages auth.
 
 ## Commands
 

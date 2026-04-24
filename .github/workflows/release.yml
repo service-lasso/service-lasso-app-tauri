@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: read
 
     steps:
       - name: Check out repo
@@ -32,18 +31,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://npm.pkg.github.com
-          scope: "@service-lasso"
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run tests
         run: npm test
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
 
       - name: Verify release artifact
         run: npm run release:verify
         env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
           SERVICE_LASSO_RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
 
       - name: Upload staged source artifact folder
