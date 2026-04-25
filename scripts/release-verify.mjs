@@ -14,5 +14,5 @@ console.log(`- source artifact: ${verified.artifacts.source.artifactName}`);
 console.log(`- source archive: ${verified.artifacts.source.archivePath}`);
 console.log(`- runtime artifact: ${verified.artifacts.runtime.artifactName}`);
 console.log(`- runtime archive: ${verified.artifacts.runtime.archivePath}`);
-console.log(`- preloaded artifact: ${verified.artifacts.preloaded.artifactName}`);
-console.log(`- preloaded archive: ${verified.artifacts.preloaded.archivePath}`);
+console.log(`- bundled artifact: ${verified.artifacts.bundled.artifactName}`);
+console.log(`- bundled archive: ${verified.artifacts.bundled.archivePath}`);

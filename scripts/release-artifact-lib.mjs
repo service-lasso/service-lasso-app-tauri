@@ -154,7 +154,7 @@ async function getLocalCorePackageArchive(repoRoot, stagedRoot) {
     }
 
     const corePackageJson = JSON.parse(await readFile(path.join(coreRepoRoot, "package.json"), "utf8"));
-    const version = corePackageJson.version;
+    const version = process.env.SERVICE_LASSO_RELEASE_VERSION ?? corePackageJson.version;
     const isolatedOutputRoot = await mkdtemp(path.join(os.tmpdir(), "service-lasso-core-package-"));
     const artifactRoot = path.join(isolatedOutputRoot, `service-lasso-package-${version}`);
     const archivePath = path.join(artifactRoot, `service-lasso-service-lasso-${version}.tgz`);
@@ -239,7 +239,7 @@ async function stageSingleArtifact({
   notes,
   installDependencies = false,
   adminDistRoot = null,
-  preloadedArchive = null,
+  bundledArchive = null,
 }) {
   const artifactRoot = path.join(outputRoot, artifactName);
   await rm(artifactRoot, { recursive: true, force: true });
@@ -259,11 +259,10 @@ async function stageSingleArtifact({
     await cp(adminDistRoot, payloadAdminRoot, { recursive: true });
   }
 
-  if (preloadedArchive) {
-    const { releaseTag, assetName, archivePath } = preloadedArchive;
+  if (bundledArchive) {
+    const { releaseTag, assetName, archivePath } = bundledArchive;
     const targetPath = path.join(
       artifactRoot,
-      ".workspace",
       "services",
       "echo-service",
       ".state",
@@ -285,6 +284,7 @@ async function stageSingleArtifact({
       ...relativePaths,
       ...(installDependencies ? ["node_modules"] : []),
       ...(adminDistRoot ? [".payload"] : []),
+      ...(bundledArchive ? [`services/echo-service/.state/artifacts/${bundledArchive.releaseTag}/${bundledArchive.assetName}`] : []),
       "release-artifact.json",
     ],
     notes,
@@ -428,6 +428,34 @@ async function createVerificationReleaseFixture(rootDir, assetNameOverride = nul
     releaseTag: "fixture",
     assetName,
     archiveType,
+    archivePath,
+  };
+}
+
+async function acquireBundledServiceArchive(outputRoot, manifest, platform) {
+  const releaseTag = manifest.artifact?.source?.tag;
+  const platformArtifact = manifest.artifact?.platforms?.[platform] ?? manifest.artifact?.platforms?.default;
+  const assetName = platformArtifact?.assetName;
+  const assetUrl = platformArtifact?.assetUrl;
+
+  if (!releaseTag || !assetName || !assetUrl) {
+    throw new Error(
+      `Cannot build bundled artifact for ${manifest.id}: service.json must define artifact.source.tag, assetName, and assetUrl.`,
+    );
+  }
+
+  const archivePath = path.join(outputRoot, ".bundled-downloads", manifest.id, releaseTag, assetName);
+  await mkdir(path.dirname(archivePath), { recursive: true });
+
+  const response = await fetch(assetUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to acquire bundled archive ${assetUrl}: HTTP ${response.status}`);
+  }
+
+  await writeFile(archivePath, Buffer.from(await response.arrayBuffer()));
+  return {
+    releaseTag,
+    assetName,
     archivePath,
   };
 }
@@ -653,7 +681,7 @@ async function verifyRuntimeArtifact({ artifactRoot, archivePath }) {
   }
 }
 
-async function verifyPreloadedArtifact({ artifactRoot, archivePath }) {
+async function verifyBundledArtifact({ artifactRoot, archivePath }) {
   await stat(archivePath);
   await stat(path.join(artifactRoot, "release-artifact.json"));
   await stat(path.join(artifactRoot, "node_modules"));
@@ -661,10 +689,8 @@ async function verifyPreloadedArtifact({ artifactRoot, archivePath }) {
 
   const fixture = await createVerificationReleaseFixture(artifactRoot);
   const archiveServer = await startArchiveServer(fixture);
-  const sourceServicesRoot = await createVerificationSourceServicesRoot(artifactRoot, archiveServer, fixture);
-  const preloadedArchivePath = path.join(
+  const bundledArchivePath = path.join(
     artifactRoot,
-    ".workspace",
     "services",
     "echo-service",
     ".state",
@@ -672,8 +698,9 @@ async function verifyPreloadedArtifact({ artifactRoot, archivePath }) {
     "fixture",
     fixture.assetName,
   );
-  await mkdir(path.dirname(preloadedArchivePath), { recursive: true });
-  await cp(fixture.archivePath, preloadedArchivePath, { force: true });
+  await mkdir(path.dirname(bundledArchivePath), { recursive: true });
+  await cp(fixture.archivePath, bundledArchivePath, { force: true });
+  const sourceServicesRoot = await createVerificationSourceServicesRoot(artifactRoot, archiveServer, fixture);
 
   const hostPort = await reserveLoopbackPort();
   const runtimePort = await reserveLoopbackPort();
@@ -694,7 +721,7 @@ async function verifyPreloadedArtifact({ artifactRoot, archivePath }) {
     }
 
     if (archiveServer.getRequestCount() !== 0) {
-      throw new Error("Preloaded runtime artifact should not fetch the service archive during install.");
+      throw new Error("Bundled runtime artifact should not fetch the service archive during install.");
     }
 
     const serviceDetail = await waitForJson(`${runtimeUrl}/api/services/echo-service`);
@@ -748,28 +775,22 @@ export async function stageReleaseArtifacts({ repoRoot, outputRoot = path.join(r
   });
 
   const echoManifest = JSON.parse(await readFile(path.join(repoRoot, "services", "echo-service", "service.json"), "utf8"));
-  const echoPlatform = echoManifest.artifact?.platforms?.[process.platform] ?? echoManifest.artifact?.platforms?.default;
-  const preloadedFixture = await createVerificationReleaseFixture(outputRoot, echoPlatform?.assetName ?? null);
-  const preloaded = await stageSingleArtifact({
+  const bundledArchive = await acquireBundledServiceArchive(outputRoot, echoManifest, process.platform);
+  const bundled = await stageSingleArtifact({
     repoRoot,
     outputRoot,
-    artifactName: `${baseName}-preloaded`,
+    artifactName: `${baseName}-bundled`,
     version: resolvedVersion,
-    artifactKind: "runnable-preloaded",
+    artifactKind: "runnable-bundled",
     relativePaths: runtimeFiles,
     notes: [
-      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, and a preseeded Echo Service archive.",
+      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, and an acquired Echo Service archive in services/.",
       "It keeps the canonical services/ inventory and proves no first-run service download is required.",
     ],
     installDependencies: true,
     adminDistRoot: resolvedAdminDistRoot,
-    preloadedArchive: {
-      releaseTag: echoManifest.artifact?.source?.tag ?? preloadedFixture.releaseTag,
-      assetName: preloadedFixture.assetName,
-      archivePath: preloadedFixture.archivePath,
-    },
+    bundledArchive,
   });
-  await rm(preloadedFixture.fixtureRoot, { recursive: true, force: true });
 
   return {
     version: resolvedVersion,
@@ -777,7 +798,7 @@ export async function stageReleaseArtifacts({ repoRoot, outputRoot = path.join(r
     artifacts: {
       source,
       runtime,
-      preloaded,
+      bundled,
     },
   };
 }
@@ -793,9 +814,9 @@ export async function verifyStagedArtifacts({ repoRoot, staged } = {}) {
     artifactRoot: release.artifacts.runtime.artifactRoot,
     archivePath: release.artifacts.runtime.archivePath,
   });
-  const preloadedVerified = await verifyPreloadedArtifact({
-    artifactRoot: release.artifacts.preloaded.artifactRoot,
-    archivePath: release.artifacts.preloaded.archivePath,
+  const bundledVerified = await verifyBundledArtifact({
+    artifactRoot: release.artifacts.bundled.artifactRoot,
+    archivePath: release.artifacts.bundled.archivePath,
   });
 
   return {
@@ -809,9 +830,9 @@ export async function verifyStagedArtifacts({ repoRoot, staged } = {}) {
         ...release.artifacts.runtime,
         verification: runtimeVerified,
       },
-      preloaded: {
-        ...release.artifacts.preloaded,
-        verification: preloadedVerified,
+      bundled: {
+        ...release.artifacts.bundled,
+        verification: bundledVerified,
       },
     },
   };
