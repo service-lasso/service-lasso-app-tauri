@@ -20,8 +20,9 @@ Current implementation:
 - host-owned shell at `/`
 - host-owned services widget that reads the runtime API through `/api/runtime-services`
 - embedded sibling `lasso-@serviceadmin` build at `/admin/`
-- tracked repo-owned `services/` definitions for Echo Service and Service Admin
+- tracked repo-owned baseline `services/` definitions for Echo Service, Service Admin, `@node`, and `@traefik`
 - manifest-owned Echo Service archive metadata under `services/echo-service/service.json`
+- manifest-owned Traefik archive metadata under `services/@traefik/service.json`
 - prepared local `servicesRoot` copied from the tracked service inventory before runtime startup
 - explicit `src-tauri/` next-step config for a future native wrapper
 
