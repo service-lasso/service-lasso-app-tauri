@@ -16,7 +16,7 @@ async function createFixtureRoots() {
 
   await mkdir(adminDistRoot, { recursive: true });
   await mkdir(path.join(sourceServicesRoot, "echo-service"), { recursive: true });
-  await mkdir(path.join(sourceServicesRoot, "service-admin"), { recursive: true });
+  await mkdir(path.join(sourceServicesRoot, "@serviceadmin"), { recursive: true });
   await writeFile(path.join(adminDistRoot, "index.html"), "<!doctype html><title>admin</title>", "utf8");
   await writeFile(path.join(adminDistRoot, "asset.js"), "console.log('admin asset');", "utf8");
   await writeFile(
@@ -24,7 +24,7 @@ async function createFixtureRoots() {
     "{\n  \"id\": \"echo-service\",\n  \"artifact\": {\n    \"kind\": \"archive\"\n  }\n}\n",
     "utf8",
   );
-  await writeFile(path.join(sourceServicesRoot, "service-admin", "service.json"), "{\n  \"id\": \"service-admin\"\n}\n", "utf8");
+  await writeFile(path.join(sourceServicesRoot, "@serviceadmin", "service.json"), "{\n  \"id\": \"@serviceadmin\"\n}\n", "utf8");
 
   return {
     root,

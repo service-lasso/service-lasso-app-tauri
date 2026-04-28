@@ -12,7 +12,7 @@ test("desktop-alt starter servicesRoot is prepared from tracked service manifest
 
   try {
     await mkdir(path.join(sourceServicesRoot, "echo-service"), { recursive: true });
-    await mkdir(path.join(sourceServicesRoot, "service-admin"), { recursive: true });
+    await mkdir(path.join(sourceServicesRoot, "@serviceadmin"), { recursive: true });
     await writeFile(
       path.join(sourceServicesRoot, "echo-service", "service.json"),
       `${JSON.stringify(
@@ -49,8 +49,8 @@ test("desktop-alt starter servicesRoot is prepared from tracked service manifest
       "utf8",
     );
     await writeFile(
-      path.join(sourceServicesRoot, "service-admin", "service.json"),
-      "{\n  \"id\": \"service-admin\",\n  \"enabled\": false\n}\n",
+      path.join(sourceServicesRoot, "@serviceadmin", "service.json"),
+      "{\n  \"id\": \"@serviceadmin\",\n  \"enabled\": false\n}\n",
       "utf8",
     );
 
@@ -60,13 +60,13 @@ test("desktop-alt starter servicesRoot is prepared from tracked service manifest
     });
 
     assert.equal(prepared.echoServiceRoot, path.join(servicesRoot, "echo-service"));
-    assert.equal(prepared.serviceAdminRoot, path.join(servicesRoot, "service-admin"));
+    assert.equal(prepared.serviceAdminRoot, path.join(servicesRoot, "@serviceadmin"));
     const manifest = JSON.parse(await readFile(path.join(servicesRoot, "echo-service", "service.json"), "utf8"));
     assert.equal(manifest.id, "echo-service");
     assert.equal(manifest.artifact.source.repo, "service-lasso/lasso-echoservice");
     assert.equal(prepared.echoServiceManifestPath, path.join(servicesRoot, "echo-service", "service.json"));
-    const adminManifest = JSON.parse(await readFile(path.join(servicesRoot, "service-admin", "service.json"), "utf8"));
-    assert.equal(adminManifest.id, "service-admin");
+    const adminManifest = JSON.parse(await readFile(path.join(servicesRoot, "@serviceadmin", "service.json"), "utf8"));
+    assert.equal(adminManifest.id, "@serviceadmin");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
