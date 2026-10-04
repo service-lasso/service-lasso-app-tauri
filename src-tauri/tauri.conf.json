@@ -1,17 +1,25 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Service Lasso App Tauri",
+  "productName": "Service Lasso Desktop",
   "version": "0.1.0",
-  "identifier": "io.service-lasso.app-tauri",
+  "identifier": "io.service-lasso.desktop",
+  "build": { "frontendDist": "../desktop" },
   "app": {
     "windows": [
       {
-        "title": "Service Lasso Desktop Alt",
-        "url": "http://127.0.0.1:19160",
+        "label": "main",
+        "title": "Service Lasso Desktop",
         "width": 1440,
         "height": 960,
         "resizable": true
       }
-    ]
+    ],
+    "security": { "capabilities": [] }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "resources": { "../.native/host/": "host/" },
+    "windows": { "nsis": { "installMode": "currentUser" } }
   }
 }

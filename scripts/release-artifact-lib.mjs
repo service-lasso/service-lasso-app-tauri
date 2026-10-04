@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile, chmod } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
@@ -15,6 +15,7 @@ const SOURCE_RELEASE_PATHS = [
   "package-lock.json",
   "src",
   "src-tauri",
+  "desktop",
   "services",
   "docs",
   "scripts",
@@ -400,6 +401,10 @@ async function createVerificationReleaseFixture(rootDir, assetNameOverride = nul
   await mkdir(workRoot, { recursive: true });
   await mkdir(archiveRoot, { recursive: true });
   await writeFile(path.join(workRoot, "README.md"), "fixture\n", "utf8");
+  // Install validates the manifest's executable exists. This fixture is not service runtime proof.
+  const fixtureCommand = path.join(workRoot, process.platform === "win32" ? "echo-service.exe" : "echo-service");
+  await cp(process.execPath, fixtureCommand);
+  await chmod(fixtureCommand, 0o755);
 
   let assetName;
   let archiveType;
@@ -414,7 +419,7 @@ async function createVerificationReleaseFixture(rootDir, assetNameOverride = nul
       "-NoLogo",
       "-NoProfile",
       "-Command",
-      `Compress-Archive -Path '${path.join(workRoot, "*").replace(/'/g, "''")}' -DestinationPath '${path.join(archiveRoot, assetName).replace(/'/g, "''")}' -Force`,
+      `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory('${workRoot.replace(/'/g, "''")}', '${path.join(archiveRoot, assetName).replace(/'/g, "''")}')`,
     ]);
   } else {
     assetName = assetNameOverride ?? (process.platform === "darwin" ? "echo-service-darwin.tar.gz" : "echo-service-linux.tar.gz");

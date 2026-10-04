@@ -1,0 +1,8 @@
+# Native Windows desktop wrapper — issue #24
+
+- NATIVE-1: A complete locked Tauri/Rust project and npm command build the Windows application and NSIS installer executable from the template. The build bundles a portable Node executable, published locked Core dependency, real release-backed Service Admin assets and app-owned service metadata; no sibling checkout is required.
+- NATIVE-2: Native launch starts the packaged Node host, waits for its readiness and opens its loopback shell. The native window grants no Rust/shell capabilities to loopback web content. Startup failure does not silently navigate to an unrelated listener.
+- NATIVE-3: Packaged resources are immutable seeds. A per-user application-data workspace holds manifests, runtime state and service data. Existing files are preserved on restart/update; builds exclude user databases, logs, secrets and existing workspace artifacts.
+- NATIVE-4: Closing the native window requests graceful shutdown over the owned child stdin and waits for that runtime. No shared process/listener or retained data is terminated/deleted. Failure to stop is reported; owned-child fallback is bounded.
+- NATIVE-5: The host can present Todo and Service Admin in the same desktop experience using declared service URLs. Todo/API/PostgreSQL remain managed services, not Rust reimplementations. First-run acquisition/setup and optional identity bootstrap stay explicit.
+- NATIVE-6: Verification distinguishes compilation, native launch/close, packaged-host integration, downstream service lifecycle, signing and offline acceptance. Existing protected tests remain intact.

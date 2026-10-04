@@ -23,11 +23,12 @@ function getMimeType(filePath) {
 }
 
 function createShellHtml(config) {
+  const adminFrameUrl = config.adminStandalone ? config.adminUrl : "/admin/";
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Service Lasso App Tauri</title>
+    <title>Tauri-ready shell for Service Lasso</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root {
@@ -214,10 +215,10 @@ function createShellHtml(config) {
   <body>
     <main>
       <section class="panel">
-        <span class="eyebrow">Desktop Alt Shell</span>
-        <h1>Tauri-ready shell for Service Lasso</h1>
+        <span class="eyebrow">Desktop</span>
+        <h1>Your app workspace</h1>
         <p>
-          This bounded host keeps the runtime and admin wiring executable today, while the future native Tauri wrapper simply needs to point its window at this local shell and the tracked service inventory.
+          Your app runs as a managed service. Use Service Admin for setup, service controls and recovery.
         </p>
         <div class="card">
           <span class="label">Runtime API</span>
@@ -232,6 +233,8 @@ function createShellHtml(config) {
           <code>${config.tauriConfigPath}</code>
         </div>
         <div class="card service-widget" data-service-widget>
+          <button class="service-widget__refresh" type="button" data-prepare-broker>Prepare first-run setup</button>
+          <p data-prepare-status>On a fresh workspace, prepare setup services, then initialize Secrets Broker in Service Admin.</p>
           <div class="service-widget__header">
             <div>
               <span class="label">Host-owned service widget</span>
@@ -243,6 +246,7 @@ function createShellHtml(config) {
           <ul class="service-list" data-service-list aria-live="polite"></ul>
         </div>
         <div class="links">
+          <button class="link" type="button" data-show-admin>Manage services</button>
           <a class="link" href="/api/host-status">
             <strong>Host status JSON</strong>
             <span>Inspect shell wiring, runtime roots, and next-step Tauri metadata.</span>
@@ -251,20 +255,35 @@ function createShellHtml(config) {
             <strong>Runtime services API</strong>
             <span>See the discovered runtime services directly.</span>
           </a>
-          <a class="link" href="/admin/" target="_blank" rel="noreferrer">
+          <a class="link" href="${config.adminUrl}" target="_blank" rel="noreferrer">
             <strong>Open Service Admin alone</strong>
             <span>Launch the embedded admin surface in its own tab.</span>
           </a>
         </div>
       </section>
       <section class="frame">
-        <iframe title="Service Admin" src="/admin/"></iframe>
+        <iframe title="Service Admin" src="${adminFrameUrl}"></iframe>
       </section>
     </main>
     <script>
       const statusElement = document.querySelector("[data-service-status]");
       const listElement = document.querySelector("[data-service-list]");
       const refreshButton = document.querySelector("[data-service-refresh]");
+      document.querySelector("[data-show-admin]").addEventListener("click", () => {
+        const frame = document.querySelector("iframe"); frame.src = ${JSON.stringify(config.adminUrl)}; frame.title = "Service Admin";
+      });
+      document.querySelector("[data-prepare-broker]").addEventListener("click", async event => {
+        event.target.disabled = true;
+        const status = document.querySelector("[data-prepare-status]");
+        status.textContent = "Preparing setup services…";
+        try {
+          const response = await fetch("/api/prepare-broker",{method:"POST"});
+          if (!response.ok) throw Error("Setup preparation failed; inspect the workspace log.");
+          status.textContent = "Ready. Initialize Secrets Broker in Service Admin to continue.";
+          const frame = document.querySelector("iframe"); frame.src = ${JSON.stringify(config.adminUrl)};
+        } catch (error) { status.textContent = error.message; }
+        finally { event.target.disabled = false; }
+      });
 
       function lifecycleLabel(service) {
         const lifecycle = service.lifecycle ?? {};
@@ -276,6 +295,20 @@ function createShellHtml(config) {
 
       function renderServices(services) {
         listElement.replaceChildren();
+        const appService = services.find(service => service.id === "todo" && service.lifecycle?.running);
+        const endpoints = appService?.lifecycle?.runtime?.endpoints ?? [];
+        const endpoint = endpoints.find(endpoint => endpoint.kind === "url" && endpoint.label === "ui");
+        const network = endpoints.find(item => item.id === endpoint?.target && item.kind === "network" && item.protocol === "http" && item.bind === "127.0.0.1" && Number.isInteger(item.port) && item.port > 0 && item.port < 65536);
+        const appUrl = endpoint?.url && !endpoint.url.includes("\${") ? endpoint.url : (network ? "http://127.0.0.1:"+network.port+"/" : null);
+        if (appUrl) {
+          try {
+            const url = new URL(appUrl);
+            if (url.protocol === "http:" && url.hostname === "127.0.0.1" && !url.username && !url.password) {
+              const frame = document.querySelector("iframe");
+              if (frame.src !== url.href) { frame.src = url.href; frame.title = "Todo"; }
+            }
+          } catch {}
+        }
 
         if (services.length === 0) {
           statusElement.textContent = "No services were discovered by the runtime.";
@@ -411,6 +444,30 @@ export function createTauriHostServer(config) {
 
   return createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", "http://127.0.0.1");
+    if (request.method === "POST" && url.pathname === "/api/prepare-broker") {
+      if (request.headers.origin !== config.hostUrl || request.headers.host !== new URL(config.hostUrl).host) {
+        writeJson(response,403,{error:"origin_refused"}); return;
+      }
+      try {
+        const before = await fetch(`${config.runtimeUrl}/api/services/%40secretsbroker`);
+        if (!before.ok) throw Error("Missing setup service");
+        const payload = await before.json();
+        const service = payload.service ?? payload;
+        const state = service.lifecycleState ?? service.lifecycle ?? {};
+        if (!state.installed) {
+          const install = await fetch(`${config.runtimeUrl}/api/services/%40secretsbroker/install`,{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
+          const result = await install.json();
+          if (!install.ok || result.result?.ok === false || result.ok === false) throw Error("Install failed");
+        }
+        if (!state.configured) {
+          const configure = await fetch(`${config.runtimeUrl}/api/services/%40secretsbroker/config`,{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
+          const result = await configure.json();
+          if (!configure.ok || result.result?.ok === false || result.ok === false) throw Error("Configure failed");
+        }
+        writeJson(response,200,{ready:true});
+      } catch { writeJson(response,502,{error:"setup_preparation_failed"}); }
+      return;
+    }
 
     if (request.method === "GET" && url.pathname === "/") {
       response.statusCode = 200;
@@ -431,6 +488,9 @@ export function createTauriHostServer(config) {
     }
 
     if (request.method === "GET" && url.pathname.startsWith("/admin")) {
+      if (!config.adminUrl.startsWith(config.hostUrl)) {
+        response.writeHead(302,{location:config.adminUrl}); response.end(); return;
+      }
       const filePath = await resolveStaticFile(config, url.pathname);
       await serveStaticFile(response, filePath);
       return;
