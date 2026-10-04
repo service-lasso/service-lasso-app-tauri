@@ -6,3 +6,9 @@
 - NATIVE-4: Closing the native window requests graceful shutdown over the owned child stdin and waits for that runtime. No shared process/listener or retained data is terminated/deleted. Failure to stop is reported; owned-child fallback is bounded.
 - NATIVE-5: The host can present Todo and Service Admin in the same desktop experience using declared service URLs. Todo/API/PostgreSQL remain managed services, not Rust reimplementations. First-run acquisition/setup and optional identity bootstrap stay explicit.
 - NATIVE-6: Verification distinguishes compilation, native launch/close, packaged-host integration, downstream service lifecycle, signing and offline acceptance. Existing protected tests remain intact.
+
+## Issue #26 packaging membership
+
+- NATIVE-1A: Repeated Admin preparation uses a fresh extraction and publishes exactly the admitted ZIP dist file set; stale cache and destination-only files never enter payloads. Retired generated payloads remain separate diagnostics. ZIP SHA-256 remains enforced.
+- NATIVE-3A: Source, runtime and bundled legacy archives retain native Cargo/config/source/icons but exclude native compiler/generated outputs, including target and gen, after desktop builds.
+- NATIVE-6A: Add repeated preparation and all-three archive sentinel regressions; retain protected tests/native compilation. Source-only authoring requires fresh entire review and complete-input ROOT before execution.
