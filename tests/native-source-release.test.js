@@ -25,7 +25,7 @@ test("NATIVE-3A all legacy artifact trees and archives exclude native compiler o
       for (const directory of ["target", "gen", "build"]) {
         await assert.rejects(stat(path.join(artifact.artifactRoot, "src-tauri", directory)), { code: "ENOENT" });
       }
-      const members = execFileSync("tar", ["-tzf", artifact.archivePath], { encoding: "utf8" }).replaceAll("\\", "/");
+      const members = execFileSync("tar", ["-tzf", artifact.archivePath], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).replaceAll("\\", "/");
       assert.doesNotMatch(members, /src-tauri\/(?:target|gen|build)\//);
       for (const name of ["Cargo.toml", "Cargo.lock", "build.rs", "tauri.conf.json", "src/main.rs", "icons/icon.ico"]) {
         assert.deepEqual(await readFile(path.join(artifact.artifactRoot, "src-tauri", name)), await readFile(path.join(repoRoot, "src-tauri", name)));

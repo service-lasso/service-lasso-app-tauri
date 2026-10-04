@@ -1,23 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { stageAdminPayload } from "../scripts/admin-payload-lib.mjs";
 
 test("NATIVE-1A repeated Admin preparation excludes stale extraction and destination files", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "admin-membership-"));
   try {
-    const input = path.join(root, "fixture");
-    await mkdir(path.join(input, "dist", "assets"), { recursive: true });
-    await writeFile(path.join(input, "dist", "index.html"), "admitted index");
-    await writeFile(path.join(input, "dist", "assets", "current.js"), "admitted asset");
     const archive = path.join(root, "admin.zip");
-    // The production extractor accepts tar as well as ZIP; use a local archive
-    // to prove membership without downloading or changing the production pin.
-    execFileSync("tar", ["-cf", archive, "-C", input, "dist"]);
+    await cp(fileURLToPath(new URL("./fixtures/admin-membership.zip", import.meta.url)), archive);
     const digest = createHash("sha256").update(await readFile(archive)).digest("hex");
     const stale = path.join(root, ".tmp", "admin-2026.8.31-f015b44", "extracted", "dist");
     await mkdir(stale, { recursive: true });
