@@ -5,3 +5,5 @@
 - [ ] Preserve existing source/runtime artifact behavior and disclose qualification boundaries.
 
 - [ ] #26 / NATIVE-1A, NATIVE-3A, NATIVE-6A: packaging membership repairs, independent entire review, new ROOT, then protected qualification. No execution during source authoring.
+
+- [ ] #28 / NATIVE-1B, NATIVE-6B: platform-independent bounded original ZIP admission/extraction and canonical fixture roots; preserve actual hosted failures; fresh entire review and ROOT before execution.

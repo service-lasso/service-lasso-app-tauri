@@ -8,7 +8,8 @@ import { fileURLToPath } from "node:url";
 import { stageReleaseArtifacts } from "../scripts/release-artifact-lib.mjs";
 
 test("NATIVE-3A all legacy artifact trees and archives exclude native compiler outputs", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "native-source-release-"));
+  const temporaryParent = await realpath(os.tmpdir());
+  const root = await realpath(await mkdtemp(path.join(temporaryParent, "native-source-release-")));
   const repoRoot = path.join(root, "repo");
   const original = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   try {
@@ -33,7 +34,7 @@ test("NATIVE-3A all legacy artifact trees and archives exclude native compiler o
       }
     }
   } finally {
-    assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    assert.ok(path.resolve(root).startsWith(path.resolve(temporaryParent) + path.sep));
     assert.equal((await lstat(root)).isSymbolicLink(), false);
     assert.equal(path.resolve(await realpath(root)), path.resolve(root));
     await rm(root, { recursive: true, force: true });

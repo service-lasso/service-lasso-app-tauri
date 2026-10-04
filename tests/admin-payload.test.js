@@ -8,7 +8,8 @@ import { fileURLToPath } from "node:url";
 import { stageAdminPayload } from "../scripts/admin-payload-lib.mjs";
 
 test("NATIVE-1A repeated Admin preparation excludes stale extraction and destination files", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "admin-membership-"));
+  const temporaryParent = await realpath(os.tmpdir());
+  const root = await realpath(await mkdtemp(path.join(temporaryParent, "admin-membership-")));
   try {
     const archive = path.join(root, "admin.zip");
     await cp(fileURLToPath(new URL("./fixtures/admin-membership.zip", import.meta.url)), archive);
@@ -33,7 +34,7 @@ test("NATIVE-1A repeated Admin preparation excludes stale extraction and destina
     await assert.rejects(stageAdminPayload({ repoRoot: root, archive, digest: "0".repeat(64) }), /checksum mismatch/);
     assert.equal(await readFile(path.join(root, ".payload", "admin", "index.html"), "utf8"), "admitted index");
   } finally {
-    assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    assert.ok(path.resolve(root).startsWith(path.resolve(temporaryParent) + path.sep));
     assert.equal((await lstat(root)).isSymbolicLink(), false);
     assert.equal(path.resolve(await realpath(root)), path.resolve(root));
     await rm(root, { recursive: true, force: true });
