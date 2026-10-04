@@ -21,10 +21,25 @@ fn port() -> std::io::Result<u16> {
         .port())
 }
 
+// Node's Windows entrypoint resolver cannot consume Tauri's extended path prefix.
+fn node_path(path: std::path::PathBuf) -> std::path::PathBuf {
+    #[cfg(windows)]
+    {
+        let text = path.as_os_str().to_string_lossy();
+        if let Some(rest) = text.strip_prefix(r"\\?\UNC\") {
+            return std::path::PathBuf::from(format!(r"\\{rest}"));
+        }
+        if let Some(rest) = text.strip_prefix(r"\\?\") {
+            return std::path::PathBuf::from(rest);
+        }
+    }
+    path
+}
+
 fn main() {
     tauri::Builder::default().setup(|app| {
-        let payload = app.path().resource_dir()?.join("host");
-        let workspace = std::env::var_os("SERVICE_LASSO_APP_TAURI_WORKSPACE_BASE_ROOT").map(std::path::PathBuf::from).unwrap_or(app.path().app_local_data_dir()?);
+        let payload = node_path(app.path().resource_dir()?.join("host"));
+        let workspace = node_path(std::env::var_os("SERVICE_LASSO_APP_TAURI_WORKSPACE_BASE_ROOT").map(std::path::PathBuf::from).unwrap_or(app.path().app_local_data_dir()?));
         std::fs::create_dir_all(&workspace)?;
         let host_port = port()?;
         let mut api_port = port()?;
