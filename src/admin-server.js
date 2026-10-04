@@ -22,6 +22,7 @@ export function createAdminServer(config) {
           response.writeHead(incoming.statusCode,out); incoming.pipe(response);
         });
         upstream.on("error",()=> { if (!response.headersSent) response.writeHead(502); response.end("Core unavailable"); });
+        response.on("close",()=>upstream.destroy());
         request.on("aborted",()=>upstream.destroy()); request.pipe(upstream); return;
       }
       if (request.method !== "GET" && request.method !== "HEAD") { response.writeHead(405); response.end(); return; }

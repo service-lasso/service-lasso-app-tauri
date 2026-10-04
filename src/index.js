@@ -8,7 +8,7 @@ import { prepareStarterServicesRoot } from "./services-root.js";
 
 async function closeServer(server) {
   if (!server?.listening) return;
-  const closed = once(server,"close"); server.close(); await closed;
+  const closed = once(server,"close"); server.close(); server.closeAllConnections(); await closed;
 }
 
 async function main() {
