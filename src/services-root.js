@@ -2,7 +2,7 @@ import path from "node:path";
 import { cp } from "node:fs/promises";
 
 export async function prepareStarterServicesRoot(config) {
-  await cp(config.sourceServicesRoot, config.servicesRoot, { recursive: true, force: true });
+  await cp(config.sourceServicesRoot, config.servicesRoot, { recursive: true, force: false, errorOnExist: false });
 
   return {
     servicesRoot: config.servicesRoot,

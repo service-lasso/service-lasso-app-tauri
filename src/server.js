@@ -23,6 +23,7 @@ function getMimeType(filePath) {
 }
 
 function createShellHtml(config) {
+  const adminFrameUrl = config.adminStandalone ? config.adminUrl : "/admin/";
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -251,14 +252,14 @@ function createShellHtml(config) {
             <strong>Runtime services API</strong>
             <span>See the discovered runtime services directly.</span>
           </a>
-          <a class="link" href="/admin/" target="_blank" rel="noreferrer">
+          <a class="link" href="${config.adminUrl}" target="_blank" rel="noreferrer">
             <strong>Open Service Admin alone</strong>
             <span>Launch the embedded admin surface in its own tab.</span>
           </a>
         </div>
       </section>
       <section class="frame">
-        <iframe title="Service Admin" src="/admin/"></iframe>
+        <iframe title="Service Admin" src="${adminFrameUrl}"></iframe>
       </section>
     </main>
     <script>
@@ -276,6 +277,17 @@ function createShellHtml(config) {
 
       function renderServices(services) {
         listElement.replaceChildren();
+        const appService = services.find(service => service.id === "todo" && service.lifecycle?.running);
+        const endpoint = appService?.lifecycle?.runtime?.endpoints?.find(endpoint => endpoint.kind === "url" && endpoint.label === "ui");
+        if (endpoint?.url && !endpoint.url.includes("\${")) {
+          try {
+            const url = new URL(endpoint.url);
+            if (url.protocol === "http:" && url.hostname === "127.0.0.1" && !url.username && !url.password) {
+              const frame = document.querySelector("iframe");
+              if (frame.src !== url.href) { frame.src = url.href; frame.title = "Todo"; }
+            }
+          } catch {}
+        }
 
         if (services.length === 0) {
           statusElement.textContent = "No services were discovered by the runtime.";
@@ -431,6 +443,9 @@ export function createTauriHostServer(config) {
     }
 
     if (request.method === "GET" && url.pathname.startsWith("/admin")) {
+      if (!config.adminUrl.startsWith(config.hostUrl)) {
+        response.writeHead(302,{location:config.adminUrl}); response.end(); return;
+      }
       const filePath = await resolveStaticFile(config, url.pathname);
       await serveStaticFile(response, filePath);
       return;

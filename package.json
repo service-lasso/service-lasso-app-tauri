@@ -7,11 +7,19 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
+    "prepare:admin": "node scripts/prepare-admin.mjs",
+    "tutorial:todo": "node scripts/prepare-todo.mjs",
+    "desktop:prepare": "node scripts/prepare-native.mjs",
+    "desktop:build": "npm run desktop:prepare && tauri build --bundles nsis -- --locked",
+    "tauri": "tauri",
     "test": "node --test --test-concurrency=1 tests/**/*.test.js",
     "release:artifact": "node scripts/release-artifact.mjs",
     "release:verify": "node scripts/release-verify.mjs"
   },
   "dependencies": {
-    "@service-lasso/service-lasso": "latest"
+    "@service-lasso/service-lasso": "2026.9.22-f3de461"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.1"
   }
 }

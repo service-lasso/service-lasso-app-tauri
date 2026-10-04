@@ -6,3 +6,6 @@ target/
 artifacts/
 .workspace/
 *.log
+.tmp/
+.payload/
+.native/

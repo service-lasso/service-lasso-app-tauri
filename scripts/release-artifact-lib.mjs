@@ -15,6 +15,7 @@ const SOURCE_RELEASE_PATHS = [
   "package-lock.json",
   "src",
   "src-tauri",
+  "desktop",
   "services",
   "docs",
   "scripts",
