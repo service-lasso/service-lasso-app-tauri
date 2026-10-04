@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, readFile, writeFile, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, writeFile, rm, lstat, realpath } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -9,6 +9,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 if (process.platform !== "win32" || process.arch !== "x64" || process.versions.node.split(".")[0] !== "22") throw Error("Native payload build requires Windows x64 and Node.js 22");
 const output = path.resolve(root, ".native", "host");
 if (!output.startsWith(root + path.sep) || output !== path.join(root, ".native", "host")) throw Error("Unsafe build output");
+for (const candidate of [path.join(root,".native"), output]) {
+  try {
+    const entry = await lstat(candidate);
+    if (entry.isSymbolicLink() || path.resolve(await realpath(candidate)) !== candidate) throw Error("Build output must not traverse a junction or symbolic link");
+  } catch (error) { if (error.code !== "ENOENT") throw error; }
+}
 const admin = await prepareAdmin();
 await rm(output, {recursive:true, force:true});
 await mkdir(output, {recursive:true});

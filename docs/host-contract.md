@@ -1,25 +1,13 @@
 # Tauri host contract
 
-This file records the component-specific implementation boundary. The shared operator journey is maintained in the Core guides linked from README.
+`src/index.js` consumes locked published Core and prepares the app-owned inventory without replacing existing workspace files. It serves a host-owned shell and service widget. Real released Admin assets run at their own private loopback origin with bounded same-origin `/api/` forwarding to the owned Core, preserving authentication headers. Legacy direct `createTauriHostServer` fixture mounts remain supported; actual host `/admin/` redirects to the standalone Admin origin.
 
-## Implemented local host
+The native wrapper launches a portable Node executable from its installed `host/` resources, waits for the exact owned child's readiness record and opens the shell. It grants no native command capabilities to web content. Available host/API ports, explicit loopback binding and app-owned registries keep its private runtime distinct from another app instance. Mutable inventory, runtime, databases and private logs stay under the stable identifier's application data directory.
 
-`src/index.js` consumes the published `@service-lasso/service-lasso` runtime. The local Node host owns its shell at `/`, exposes a bounded services widget through `/api/runtime-services`, and embeds a sibling built Service Admin at `/admin/`. It supplies explicit `servicesRoot` and `workspaceRoot`, preparing its local inventory from tracked `services/` definitions before startup.
+Native close requests shutdown over the owned child stdin. Node caches one shutdown promise so duplicate signal/pipe events cannot exit before runtime teardown. The wrapper waits for successful child exit; a timeout leaves the window open for recovery, and nonzero child exit remains a failure. Startup failure requests cancellation, waits and terminates only its exact owned child if wedged. No broad PID/port cleanup or retained-data deletion is permitted. A forced child stop does not qualify descendant shutdown.
 
-The entrypoint is `npm start`. Source defaults are host shell `http://127.0.0.1:19160`, Admin `http://127.0.0.1:19160/admin/` and runtime API `http://127.0.0.1:18081`. Availability depends on instance configuration and the prerequisites in the shared guide.
+The Broker seed follows Core develop `7332a05284a90bb6cf35434c644711c1724c496c`'s canonical IPC consumer definition, pinned to `2026.8.31-f340883`. Process health is separate from Core's authenticated IPC readiness check during first-run vault ingest; no HTTP Broker health endpoint is claimed. The raw producer's HTTP endpoint definition was incompatible with this IPC-hosted path and its failed bootstrap is retained.
 
-## Native wrapper boundary
+`tutorial:todo` creates checksum-pinned App/API/PostgreSQL seeds and disables unrelated starter services for that fresh inventory. The host selects the declared Todo UI target's committed loopback network endpoint when the published Core metadata retains a URL expression. Todo remains a managed service; window code does not reimplement its backend. Broker preparation is an explicit fixed install/config operation; initialization and recovery material remain in the real Admin/Core flow.
 
-`src-tauri/tauri.conf.json` defines the next wrapper's product/window configuration and local host URL. [The wrapper boundary](../src-tauri/README.md) records the current status: the local Node host is implemented; native Rust/Tauri packaging/build is not compiled in this slice. The configuration does not prove an Tauri window, native executable, signed installer, auto-update, tray/process integration or distribution acceptance. Local host tests and staged package verification cannot substitute for native compilation and runtime evidence.
-
-## Managed inventory
-
-The tracked baseline contains `echo-service`, `@serviceadmin`, `@node`, `@localcert`, `@nginx` and `@traefik`; optional `@python` and `@java` examples are disabled. Echo and Traefik download/archive identities belong to their service manifests. Traefik declares `@localcert` and `@nginx` as dependencies. Core service identifiers retain their `@` prefix; the sample `echo-service` remains unprefixed.
-
-## Packaging boundary
-
-The starter's release contracts distinguish source, bootstrap-download and bundled/no-download artifacts. Packaging and release verification remain governed by the existing [release artifact contract](release-artifact.md), scripts and workflows. Those artifacts do not establish native Tauri compilation, single-file packaging or installer acceptance.
-
-## Documentation migration receipt
-
-For service-lasso/service-lasso#1418 / SPEC-002 AC-4AJ.3 and companion issue #22, the reviewed README and generic `docs/minimal-poc.md` came from develop `5662c70f2b1c8af80e01d9aede00c3ace075fba6`. README now links to the shared Core journey merged in PR #1424; the replaced generic guide is removed. Host, wrapper and release contracts remain component-owned. No runtime acceptance, publication or release is claimed.
+Native Windows candidate CI builds an NSIS executable with the Todo seeds. Source/runtime tarball verification remains a separate legacy contract; corrected acquisition fixtures include the command required by the pinned Core install validator and do not qualify real service execution. See [native build guide](../src-tauri/README.md), [release artifacts](release-artifact.md), and SPEC-NATIVE-DESKTOP NATIVE-1–6. Compilation, native launch/close, managed-stack data retention, OS trust, signing, offline and GA claims require their respective evidence.

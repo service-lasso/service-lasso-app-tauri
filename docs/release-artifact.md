@@ -108,9 +108,9 @@ The release now proves:
 ## Public package note
 
 This starter depends on the public npm core package:
-- `@service-lasso/service-lasso@latest`
+- `@service-lasso/service-lasso@2026.9.22-f3de461`
 
-The `latest` dist-tag is intentional so starter artifacts consume the current manifest-owned install/acquire behavior published by the core repo.
+The exact package version and committed lockfile make the desktop payload reproducible. Updating Core requires a deliberate dependency update and new verification.
 
 Local and CI installs resolve it from `https://registry.npmjs.org` without GitHub Packages auth.
 
@@ -143,3 +143,11 @@ Example:
 Any application using Service Lasso should keep a tracked `services/` folder in its repo with the service metadata it intends to manage.
 
 This app-tauri starter now uses that tracked inventory directly for bootstrap-download and bundled behavior.
+
+## Native Windows candidate
+
+`npm run tutorial:todo` seeds the released Todo, API and PostgreSQL manifests into a fresh checkout. `npm run desktop:build` compiles a Tauri application and an NSIS `.exe` installer under `src-tauri/target/release/bundle/nsis/`.
+
+This path bundles Node.js 22, locked production Core dependencies and checksum-verified published Service Admin assets. It copies service manifests only; it excludes live workspaces, databases and vault files. The installed application creates a private writable workspace and downloads managed service payloads during first-run installation. Its Broker definition follows Core's canonical IPC consumer contract.
+
+The Native Windows workflow builds a candidate installer and uploads its payload receipt. This is separate from the three legacy tarballs described above; it does not publish a release. Legacy acquisition fixtures validate packaging and installation contracts, not actual Echo execution or native-window behavior. Native acceptance requires running the compiled application and checking owned-process shutdown and retained Todo data.
