@@ -14,6 +14,14 @@ npm run desktop:build
 
 `tutorial:todo` is optional; it creates fresh pinned Todo/API/PostgreSQL seed manifests and refuses to overwrite existing service folders. The build copies only manifests into its payload, bundles portable Node and locked production dependencies, and acquires checksum-verified real Admin assets. User workspaces/databases/keys are excluded.
 
+The corrected seed pins are Todo `2026.10.4-15dc4b9` and API `2026.10.4-02ef566`.
+Fresh seeds explicitly use anonymous local API mode. To add SSO, follow the
+[paired Todo/API lesson](https://service-lasso.github.io/service-lasso/getting-started/zitadel-sso-hub):
+register the Web and API clients, stop both services and run the acquired
+paired configuration helper. Keep the API secret in a private runtime file,
+outside the source seed and native payload. App login alone does not protect
+direct API access. Existing installed workspaces require an explicit upgrade.
+
 The installer is `src-tauri/target/release/bundle/nsis/Service Lasso Desktop_0.1.0_x64-setup.exe`. Install and launch it. Keep the installer intact; the raw app binary requires its installed `host/` resources. User state lives under `%LOCALAPPDATA%/io.service-lasso.desktop/` and survives application restarts/upgrades. Customize productName, identifier and version before distributing your own app.
 
 Use **Prepare first-run setup**, then **Initialize Secrets Broker** in Admin. Install/configure/start your chosen managed services through Admin. The host switches its frame to running Todo when you refresh its service list; **Manage services** returns to Admin. Native mode chooses available loopback host/API ports and keeps its registry files inside the workspace.

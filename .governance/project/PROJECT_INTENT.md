@@ -7,3 +7,5 @@ Issue #24 enables the next Core Todo tutorial (#1679): a reproducible Windows na
 Issue #26 repairs release membership: fresh checksum-bound Admin staging replaces generated payloads; legacy archives include native sources only, after desktop compilation. Source review and new input admission precede execution.
 
 Issue #28 repairs actual post-merge Windows canonical TEMP identity and Linux genuine ZIP staging, bound to NATIVE-1B/6B. All source and execution gates remain distinct; Darwin deferred. Native resources, retained workspace and legacy source/runtime/bundled contracts remain required.
+
+Issue #30 updates Todo/API seed pins to Core #1692's corrected authentication consumers. Fresh desktop mode is explicitly anonymous; optional SSO secures both services and uses private runtime credential paths, never packaged secrets. Native sources and existing workspaces remain unchanged.
