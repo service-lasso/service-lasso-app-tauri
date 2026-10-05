@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const releases = [
-  ["lasso-todo","2026.10.4-9c6567f","todo","02ff28027ca88285f1d6cf482272b03a3638c0f9ec8b41bea624e48b1e49c956"],
-  ["lasso-todo-api","2026.10.4-3e560cc","todo-api","f8beb39042f18c31d8ee3baba054e92071419610236ddc597220d9a140293998"],
+  ["lasso-todo","2026.10.4-15dc4b9","todo","58bc674a977b87fef61785631079e8b140eb102f0ee289c7a987ce58c69404ac"],
+  ["lasso-todo-api","2026.10.4-02ef566","todo-api","769f23ce8e4dbbca6ad8c55c9a76dc78c404d06d740594470b4dc3ff1ce1a953"],
   ["lasso-postgres","2026.10.4-1af7982","postgres","8c7554f638668c5df252249a36a9d58b6df83effb7a4f7de94e12767e388bb95"]
 ];
 for (const [,,id] of releases) {

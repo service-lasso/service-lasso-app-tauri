@@ -14,7 +14,7 @@ npm run desktop:build
 
 `tutorial:todo` is optional; it creates fresh pinned Todo/API/PostgreSQL seed manifests and refuses to overwrite existing service folders. The build copies only manifests into its payload, bundles portable Node and locked production dependencies, and acquires checksum-verified real Admin assets. User workspaces/databases/keys are excluded.
 
-The corrected seed pins are Todo `2026.10.4-9c6567f` and API `2026.10.4-3e560cc`.
+The corrected seed pins are Todo `2026.10.4-15dc4b9` and API `2026.10.4-02ef566`.
 Fresh seeds explicitly use anonymous local API mode. To add SSO, follow the
 [paired Todo/API lesson](https://service-lasso.github.io/service-lasso/getting-started/zitadel-sso-hub):
 register the Web and API clients, stop both services and run the acquired
